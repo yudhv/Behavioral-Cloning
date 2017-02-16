@@ -58,7 +58,7 @@ def curve_focus(xdata,ydata):
 	print("Total = {}\n0 Steering = {}".format(len(xdata),count))
 	return xdata,ydata
 
-def augment(xdata,ydata):
+def flip(xdata,ydata):
 	for x in range(len(xdata)):
 		xdata.append(np.fliplr(xdata[x]))
 		ydata = np.append(ydata,(-1*ydata[x]))
@@ -67,9 +67,9 @@ def augment(xdata,ydata):
 def set_model():
 	model = Sequential()
 	model.add(Convolution2D(36,5,5,border_mode='valid',activation="elu",
-		input_shape=X_train[0].shape))
-	model.add(Convolution2D(48,3,3,activation="elu",border_mode='valid'))
-	model.add(Convolution2D(64,3,3,activation="elu",border_mode='valid'))
+		input_shape=X_train[0].shape), trainable="False")
+	model.add(Convolution2D(48,3,3,activation="elu",border_mode='valid'),trainable="False")
+	model.add(Convolution2D(64,3,3,activation="elu",border_mode='valid'),trainable="False")
 	model.add(Convolution2D(64,3,3,activation="elu",border_mode='valid'))
 	model.add(Flatten())
 	# model.add(Dropout(0.5))
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 	# plt.show()
 	# Process data
 	# X_train,y_train = curve_focus(X_train,y_train)
-	X_train,y_train = augment(X_train,y_train)
+	X_train,y_train = flip(X_train,y_train)
 	X_train = np.array(X_train)
 	# plt.hist(y_train)
 	# plt.show()
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 	print(X_train.shape)
 
 	# model = set_model()
-	model = load_model('model.h5') 
+	model = load_model('model1.h5') 
 
 	adam = Adam(lr=Learning_Rate)
 	model.compile(optimizer = adam, loss = 'mean_squared_error', 
@@ -129,13 +129,3 @@ if __name__ == "__main__":
 		validation_data=(X_validation,y_validation))
 	model.save('model1.h5')
 	print("Model saved")
-
-	# model.add(MaxPooling2D(pool_size=(2,2)))
-	# model.add(Dropout(0.5))
-	# model.add(Activation('relu'))
-	# model.add(Flatten(input_shape=(32,32,3)))
-	# model.add(Dense(128))
-	# model.add(Activation('relu'))
-	# model.add(Dense(43))
-	# model.add(Activation('softmax'))
-
