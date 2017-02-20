@@ -1,8 +1,8 @@
 #**Behavioral Cloning** 
 
-##Writeup Template
+##Brief Description
 
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+###In this project, we are given a simulated environment of a test track, where we drive a car manually at first and let a Convolutional Neural Network model learn from our driving "behavior". The model is only given images from the simulator as training data. Finally, the model is given a chance to drive the track itself without any human intervention. Let's begin!!!
 
 ---
 
@@ -38,7 +38,7 @@ My project includes the following files:
 * model.py containing the script to create and train the model
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network 
-* writeup_report.md or writeup_report.pdf summarizing the results
+* writeup_report.md summarizing the results
 
 ####2. Submssion includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
@@ -55,12 +55,29 @@ The model.py file contains the code for training and saving the convolution neur
 ####1. An appropriate model arcthiecture has been employed
 
 My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+```sh
+model = Sequential()
+model.add(Lambda(lambda x: x/127.5 - 1.,input_shape=SHAPE, output_shape=SHAPE))
+model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
+model.add(Convolution2D(36,5,5,border_mode='same',activation="elu",name='conv1'))
+model.add(Convolution2D(48,3,3,activation="elu",border_mode='same',name='conv2'))
+model.add(Convolution2D(64,3,3,activation="elu",border_mode='same', name='conv3'))
+model.add(Convolution2D(64,3,3,activation="elu",border_mode='same', name='conv4'))
+model.add(Flatten(name='flat1'))
+model.add(Dense(100, activation="elu", name='dense1'))
+model.add(Dense(50, activation="elu", name='dense2'))
+model.add(Dense(10, activation="elu", name='dense3'))
+model.add(Dense(1, activation="linear", name='dense4'))
+```
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+Note: the model includes RELU activations in all layers to introduce nonlinearity, and the data is normalized in the model using a Keras lambda layer (code line 18). 
 
 ####2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+In-order to reduce overfitting, the following steps were employed:
+* Using lower resolution images - the images used were downsampled to almost 10% of their original sizes. This only kept the basic features of the road, lane lines, and side fencing to remain visible. The unnecessary part, i.e the scenery, grounds, and water bodies were all reduced to mere colors. This helped greatly in removing any chances of overfitting, while keeping the test data manageable and trainable even on a discreet GPU-less machine such as the one I had. (Insert image)
+* Using a lower learning rate - in this project, I used a low learning rate 1e-4 as it wasn't small enough to cause underfitting in the limited epochs I trained the model for, nor was it too high to cause local minima situations. (Insert bridge images here)
+* Using a smaller set of images - only 8,000 images were used to train the model. The images were taken from Udacity's test data, which had smoother steering angles than the ones I could generate from a keyboard during manual driving (Insert the heart chart here)
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
