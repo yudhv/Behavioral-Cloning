@@ -30,8 +30,8 @@ FOLDER = "examples/"
 EPOCHS = 4
 TRAINABLE = True
 BRIGHTNESS_RANGE = 0.15
-IMG_ROWS = 30
-IMG_COLS = 30
+IMG_ROWS = 300
+IMG_COLS = 300
 SHAPE = (IMG_ROWS,IMG_COLS,3)
 
 SAMPLES_TRAIN = 5000
@@ -70,18 +70,18 @@ def adjust_brightness(im):
 def img_translate(img, angle):
 
 	# Randomly form the X translation distance and compute the resulting steering angle change
-    change = np.random.uniform(-0.5,0.5)
-    x_translation = (TRANS_X_RANGE * change)
-    new_angle = angle + (change * TRANS_ANGLE)
+	change = np.random.uniform(-0.5,0.5)
+	x_translation = (TRANS_X_RANGE * change)
+	new_angle = angle + (change * TRANS_ANGLE)
 
-    # Randomly compute a Y translation
-    y_translation = (TRANS_Y_RANGE * np.random.uniform(-0.5,0.5))
+	# Randomly compute a Y translation
+	y_translation = (TRANS_Y_RANGE * np.random.uniform(-0.5,0.5))
 
-    # Form the translation matrix
-    translation_matrix = np.float32([[1, 0, x_translation], [0, 1, y_translation]])
+	# Form the translation matrix
+	translation_matrix = np.float32([[1, 0, x_translation], [0, 1, y_translation]])
 
-    # Translate the image
-    return cv2.warpAffine(img, translation_matrix, (img.shape[1], img.shape[0])),new_angle
+	# Translate the image
+	return cv2.warpAffine(img, translation_matrix, (img.shape[1], img.shape[0])),new_angle
 
 
 def crop(im):
@@ -111,8 +111,8 @@ def flip(xdata,ydata):
 def set_model():
 	model = Sequential()
 	model.add(Lambda(lambda x: x/127.5 - 1.,
-        input_shape=SHAPE,
-        output_shape=SHAPE))
+		input_shape=SHAPE,
+		output_shape=SHAPE))
 	model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
 	model.add(Convolution2D(36,5,5,border_mode='same',activation="elu",
 	 name='conv1'))
@@ -137,15 +137,32 @@ def my_range(start, end, step):
 		start += step
 
 def show_data(log):
-	steer = log[:,3]
+	fig = plt.figure(figsize=(8,2))
+	a = fig.add_subplot(1,2,1)
+	im = cv2.imread(FOLDER+log[560,0].strip())
+	im = cv2.cvtColor(im,cv2.COLOR_BGR2RGB)
+	a.set_title("Full Resolution")
+	plt.axis('off')
+	plt.imshow(im)
+	im = misc.imresize(im,size=0.2)
+	a = fig.add_subplot(1,2,2)
+	a.set_title("After 80% Downsampling")
+	plt.imshow(im)
+	# im = crop(im)
+	# im, an = process_line(log[600])
+	# a = fig.add_subplot(2,1,2)
+	# im, an = process_line(log[600])
+	# plt.imshow(im,aspect="auto",interpolation="nearest")
+	plt.axis('off')
+	fig.savefig('examples/Downsampling.png')
+	plt.show()
+	exit()
 	# plt.hist(steer,bins=100)
 	# plt.show()
 	# exit()
-	# steer = pd.cut(steer,20,include_lowest=True,retbins=False)
-	print(steer[1000])
-	fig = plt.figure(figsize=(10,10))
 	count = 1
 	y = 0
+	steer = log[:,3]
 	for x in my_range(-0.8,0.7,0.1):
 		while 1:
 			y = np.random.randint(len(steer))
@@ -224,7 +241,9 @@ def generator(samples, batch_size=32):
 
 if __name__ == "__main__":
 	log = pd.read_csv(FOLDER+"driving_log.csv").values
-	# show_data(log)
+	show_data(log)
+	
+
 	print(log.shape)
 	train_samples, validation_samples = train_test_split(log,test_size=0.2)
 	
@@ -240,8 +259,8 @@ if __name__ == "__main__":
 	adam = Adam(lr=Learning_Rate)
 	model.compile(optimizer = adam, loss = 'mean_squared_error')
 	history=model.fit_generator(generator(train_samples), samples_per_epoch = 
-            SAMPLES_TRAIN, validation_data=generator(validation_samples), 
-            nb_val_samples=SAMPLES_VALIDATION, nb_epoch=EPOCHS, verbose=1)
+			SAMPLES_TRAIN, validation_data=generator(validation_samples), 
+			nb_val_samples=SAMPLES_VALIDATION, nb_epoch=EPOCHS, verbose=1)
 	model.save_weights('weights.h5')
 	model.save('model.h5')
 	
