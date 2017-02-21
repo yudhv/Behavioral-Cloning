@@ -18,13 +18,20 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[image1]: ./examples/heart_rate_chart_bad.png "Smoothness image custom data"
+[image2]: ./examples/Downsampling.png "Downsampling"
+[image3]: ./examples/all_new.png "Aggregation after"
+[image4]: ./examples/all_old.png "Aggregation before"
+[image5]: ./examples/heart_rate_chart_good.png "Smoothness image udacity data"
+[image6]: ./examples/hist_new.png "Histogram after"
+[image7]: ./examples/hist_old.png "Histogram before"
+[image8]: ./examples/model.png "Model"
+[image9]: ./examples/recovery1.jpg "recovery1"
+[image10]: ./examples/recovery2.jpg "recovery2"
+[image11]: ./examples/recovery3.jpg "recovery3"
+[image12]: ./examples/flip.png "Flip"
+
+
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -75,19 +82,29 @@ Note: the model includes RELU activations in all layers to introduce nonlinearit
 ####2. Attempts to reduce overfitting in the model
 
 In-order to reduce overfitting, the following steps were employed:
-* Using lower resolution images - the images used were downsampled to almost 10% of their original sizes. This only kept the basic features of the road, lane lines, and side fencing to remain visible. The unnecessary part, i.e the scenery, grounds, and water bodies were all reduced to mere colors. This helped greatly in removing any chances of overfitting, while keeping the test data manageable and trainable even on a discreet GPU-less machine such as the one I had. (Insert image)
-* Using a lower learning rate - in this project, I used a low learning rate 1e-4 as it wasn't small enough to cause underfitting in the limited epochs I trained the model for, nor was it too high to cause local minima situations. (Insert bridge images here)
-* Using a smaller set of images - only 8,000 images were used to train the model. The images were taken from Udacity's test data, which had smoother steering angles than the ones I could generate from a keyboard during manual driving (Insert the heart chart here)
+* Using lower resolution images - the images used were downsampled to almost 10% of their original sizes. This only kept the basic features of the road, lane lines, and side fencing to remain visible. The unnecessary part, i.e the scenery, grounds, and water bodies were all reduced to mere colors. This helped greatly in removing any chances of overfitting, while keeping the test data manageable and trainable even on a discreet GPU-less machine such as the one I had. 
+* Using a lower learning rate - in this project, I used a low learning rate 1e-4 as it wasn't small enough to cause underfitting in the limited epochs I trained the model for, nor was it too high to cause a situation with local minima.
+* Using a smaller set of images - only 8,000 images were used to train the model. The images were taken from Udacity's test data, which had smoother steering angles than the ones I could generate from a keyboard during manual driving.
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 ####3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+The model used an adam optimizer with a learning rate of 1e-04. The number of epochs was set at 5, as there wasn't a substantional observed improvement after. 
 
 ####4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+The training data derived by manually driving through Track 1 is very abrupt. This is especially true if you use a keyboard to drive rather than a mouse or a joystick, which was the case for me as the MacOS simulator does not allow mouse input for steering angles. Here is a comparison of the official Udacity provided data and the one I recorded using a keyboard on Track 1 - 
+
+*Smooth angle distribution*
+![image5]
+
+*Non-smooth angle distribution*
+![image1]
+
+As can be seen quiet clearly from the steering angle spikes, the Udacity data is much more smoother than the one obtained through keyboard based inputs. This adversely affects the training phase where the model only learns how to drive "rash", and hence is predisposed to naturally going out of the road because of a random extreme turn. This is why I had no option but to use the limited Udacity data for training. 
+
+To make the most of this data, I used a combination of artificial techniques to augment and balance the data, like randomly choosing between center, left, and right camera images (and adjusting steering angles accordingly), X and Y axis translation, image flipping, normalization, cropping, brightness adjustment, etc. 
 
 For details about how I created the training data, see the next section. 
 
@@ -95,52 +112,66 @@ For details about how I created the training data, see the next section.
 
 ####1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to ...
+The overall strategy for deriving a model architecture was to go from an underfitting model to one that was just starting to overfit. In the interim, I believed I would find the perfect solution. 
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+My first step was to use a convolution neural network model similar to the one mentioned in Nvidia's brilliant [End to End Learning whitepaper](Screen Shot 2017-02-21 at 3.06.43 PM). I thought this model to be appropriate because Nvidia aimed to solve a problem that was remarkably similar to the one I was facing. They tried to guide a car simply image-based data without giving their autonomous car any pre-trained logic to rely on, and trusted their Deep Learning network to figure out the important aspects of image data just like a teenager would while trying to learn how to drive for the first time. The idea resonated with me and I set about to base my strategy on Nvidia's solid foundation. 
+
+Consequently, I built a model very similar to the one Nvidia used. It had a starting normalization layer followed by Convolutional layers with RELU activation. Finally, 5 Fully connected (FC) layers were used that converged gradually to give a single steering angle output in the end.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
 
-To combat the overfitting, I modified the model so that ...
+To mitigate the overfitting, I made the following changes-
+* Removing the first fully connected layer with 1164 outputs and instead, going straight with the 100 unit wide 2nd FC layer. This heavily reduced my RAM consumption by a factor of 8.
+* Removing the 3rd Convolutional Layer altogether
+* Performing data augmentation and processing techniques to make the model more robust. These included flipping images, X and Y translation, brightness adjustment, downscaling, and cropping. 
 
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
-
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
+At the end of the process, the vehicle was able to drive autonomously around the track without leaving the road.
 
 ####2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes -
+![image8]
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
-
-![alt text][image1]
+* The first layer is tasked with normalizing the images to values between -1 and 1
+* The Convolution layer is based out of a [brilliant idea](https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.lvotuk68j) where the model learns to select which of the three color spaces is best for achieving minimum loss
+* 3, 4, 5, and 6 Convolution layers are meant to perform the usual feature extractions from the image data in increasing complexity. The final convolutional layer has a depth of 64 filters and output size 30 * 30
+* The 4 Fully Connected layers help converge the model to a single output using linear activation in the last FC layer. This output is then used as the steering angle prediction of the model. 
 
 ####3. Creation of the Training Set & Training Process
 
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+To capture good driving behavior, I used Udacity's "smoother" driving data that had a combination of center lane driving and recovery recordings. 
 
-![alt text][image2]
+A note on Recovery recording - If our model only learns from center lane driving, then there is a high likelihood that it would not know what to do once the car moves away from the center of the road (which is likely to happen since we never achieve a 0 loss during pratical training). In such a case, it is imperative to teach the model how to recover from probable failures (e.g when the car is moving towards the side lanes). Hence, recordings have been done in such a way where the car is observed to be at the very edge of the road in the start, and then drives back to the middle of the road. Here is an example - 
 
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
+![image9]
 
-![alt text][image3]
-![alt text][image4]
-![alt text][image5]
+![image10]
 
-Then I repeated this process on track two in order to get more data points.
+![image11]
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
+Although Udacity's data was smoother than what one could generate through a keyboard, the data still wasn't balanced. It had a much higher percentage of 0 steering angle than any other. This was bound to make the model learn driving "straight" and ended up causing problems during sharp turns, where the car would simply run out of the road due to its straight line driving. 
 
-![alt text][image6]
-![alt text][image7]
+![image7]
 
-Etc ....
+Coming back to the training data, the following steps were performed to augment and process the data - 
+* Flipping images - To augment the data sat, I also flipped images and angles thinking that this would not only add some much needed generalization to the model, but would also not add any noise to the training data. This was a simple and effective technique to double the training set. Here is an example -
+![image12]
+* X and Y translation - Moving the image a random number of pixels in the X direction was equivalent to making the model feel that the car was moving on the road. Coupled with this was an equivalent amount of change in the steering angle that helped generalize the model better
+* Brightness - Changing the brightness aspect of the images led the model to be more resistant to lighting effects like shadows, time of day, and weather. This, I believe, will lead to better performance in other environments as well. 
+* Downscaling and squaring images - Downscaling the images was one of the biggest factors that helped the model generalize even with the limited data samples I had at my disposal. My assumption is that with low res images, the model was unable to recognize "objects" from the surrounding environments and hence, did not get the chance to overfit. However, I'll have to confirm this hypothesis by looking at the outputs of individual layers. Also, resizing the images to a square resolution of 30 * 30 * 3 helped the 5 * 5 and 3 * 3 filters better fit into the data without needing to add unnecessary padding. 
+![image2]
 
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+After the augmentation and balancing process, I had ~16000 data points which looked like this
 
+![image6]
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+At first comparison, it becomes evident that the data is much better now. It is less biased toward a 0 steering angle, has double the number of data points, and is much more robust to changes in lighting and the relative position of the car on the road.
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+Here is another comparison - 
+
+*Old data*
+![image4]
+*Processed data*
+![image3]
+
+I finally randomly shuffled the data set and put 20% of the data into a validation set. 
