@@ -171,8 +171,10 @@ I finally randomly shuffled the data set and put 20% of the data into a validati
 
 ---
 
-### CONCLUSION
+### Conclusion
 On testing the above model on the simulator, the car drove indefinitely without touching the sidelanes. The goal was achieved and it was proven that a dataset as small as 8,000 images can be enough to successfully train a Convolutional Neural Network. This was also the smallest dataset used among my fellow Udacity students to train and test a CNN successfully on the simulation. 
+
+[Here is a link to the final output](examples.mp4)
 
 #### What's next?
 There is a Track 2....
