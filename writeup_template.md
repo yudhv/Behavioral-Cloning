@@ -1,20 +1,19 @@
 # **Behavioral Cloning** 
 
+The following command must be used in the project's root directory to see the Neural Network in action!!
+```sh
+python drive.py model.h5
+```
+
 ## Brief Description
 
-###In this project, we are given a simulated environment of a test track, where we drive a car manually at first and let a Convolutional Neural Network model learn from our driving "behavior". The model is only given images from the simulator as training data. Finally, the model is given a chance to drive the track itself without any human intervention. Let's begin!!!
-
----
-
-**Behavrioal Cloning Project**
+#### In this project, we are given a simulated environment of a test track, where we drive a car manually at first and let a Convolutional Neural Network model learn from our driving "behavior". The model is only given images from the simulator as training data. Finally, the model is given a chance to drive the track itself without any human intervention. Let's begin!!!
 
 The goals / steps of this project are the following:
-* Use the simulator to collect data of good driving behavior
-* Build, a convolution neural network in Keras that predicts steering angles from images
-* Train and validate the model with a training and validation set
-* Test that the model successfully drives around track one without leaving the road
-* Summarize the results with a written report
-
+* Using a simulator to collect data of good driving behavior
+* Building a convolution neural network in Keras that predicts steering angles from images
+* Training the model with randomly split training and validation sets
+* Testing the model by letting it successfully drive around a simulated track autonomously
 
 [//]: # (Image References)
 
@@ -31,35 +30,36 @@ The goals / steps of this project are the following:
 [image11]: ./examples/recovery3.jpg "recovery3"
 [image12]: ./examples/flip.png "Flip"
 
-
-
-## Rubric Points
-###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
-
 ---
-### Files Submitted & Code Quality
 
-#### 1. Submission includes all required files and can be used to run the simulator in autonomous mode
+### The DATA
 
-My project includes the following files:
-* model.py containing the script to create and train the model
-* drive.py for driving the car in autonomous mode
-* model.h5 containing a trained convolution neural network 
-* writeup_report.md summarizing the results
+#### Which data to choose?
 
-#### 2. Submssion includes functional code
-Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
-```sh
-python drive.py model.h5
-```
+The training data derived by manually driving through Track 1 was very abrupt. This is especially true if you use a keyboard to drive rather than a mouse or a joystick, which was the case for me as the MacOS simulator does not allow mouse input for steering angles. Here is a comparison of the official Udacity provided data and the one I recorded using a keyboard on Track 1 - 
 
-#### 3. Submssion code is usable and readable
+*Smooth angle distribution*
+![image5]
 
-The model.py file contains the code for training and saving the convolution neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
+*Non-smooth angle distribution*
+![image1]
+
+As can be seen quiet clearly from the steering angle spikes, the Udacity data is much more smoother than the one obtained through keyboard based inputs. This adversely affects the training phase where the model only learns how to drive "rash", and hence is predisposed to naturally going out of the road because of the random turn in a wrong direction. This is why I had no option but to use the limited Udacity data for training. 
+
+However, all is not finished yet. To make the most of this data, I used a combination of artificial techniques to augment and balance the data, like randomly choosing between center, left, and right camera images (and adjusting steering angles accordingly), X and Y axis translation, image flipping, normalization, cropping, brightness adjustment, etc. 
+
+For details about how I created the training data, skip to the next section. 
+
+#### Reducing Overfitting
+
+In-order to reduce overfitting, the following steps were employed:
+* Using lower resolution images - the images used were downsampled to almost 10% of their original sizes. This only kept the basic features of the road, lane lines, and side fencing to remain visible. The unnecessary part, i.e the scenery, grounds, and water bodies were all reduced to mere colors. This helped greatly in removing any chances of overfitting, while keeping the test data manageable and trainable even on a discreet GPU-less machine such as the one I had. 
+* Using a lower learning rate - in this project, I used a low learning rate 1e-4 as it wasn't small enough to cause underfitting in the limited epochs I trained the model for, nor was it too high to cause a situation with local minima.
+* Using a smaller set of images - only 8,000 images were used to train the model. The images were taken from Udacity's test data, which had smoother steering angles than the ones I could generate from a keyboard during manual driving.
+
+The model was trained and validated on different data sets to ensure that the model was not overfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 ### Model Architecture and Training Strategy
-
-#### 1. An appropriate model arcthiecture has been employed
 
 My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
 ```sh
@@ -77,40 +77,9 @@ model.add(Dense(10, activation="elu", name='dense3'))
 model.add(Dense(1, activation="linear", name='dense4'))
 ```
 
-Note: the model includes RELU activations in all layers to introduce nonlinearity, and the data is normalized in the model using a Keras lambda layer (code line 18). 
+Note: the model includes RELU activations in all layers to introduce nonlinearity, and the data is normalized in the model using a Keras lambda layer. 
 
-#### 2. Attempts to reduce overfitting in the model
-
-In-order to reduce overfitting, the following steps were employed:
-* Using lower resolution images - the images used were downsampled to almost 10% of their original sizes. This only kept the basic features of the road, lane lines, and side fencing to remain visible. The unnecessary part, i.e the scenery, grounds, and water bodies were all reduced to mere colors. This helped greatly in removing any chances of overfitting, while keeping the test data manageable and trainable even on a discreet GPU-less machine such as the one I had. 
-* Using a lower learning rate - in this project, I used a low learning rate 1e-4 as it wasn't small enough to cause underfitting in the limited epochs I trained the model for, nor was it too high to cause a situation with local minima.
-* Using a smaller set of images - only 8,000 images were used to train the model. The images were taken from Udacity's test data, which had smoother steering angles than the ones I could generate from a keyboard during manual driving.
-
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
-
-#### 3. Model parameter tuning
-
-The model used an adam optimizer with a learning rate of 1e-04. The number of epochs was set at 5, as there wasn't a substantional observed improvement after. 
-
-#### 4. Appropriate training data
-
-The training data derived by manually driving through Track 1 is very abrupt. This is especially true if you use a keyboard to drive rather than a mouse or a joystick, which was the case for me as the MacOS simulator does not allow mouse input for steering angles. Here is a comparison of the official Udacity provided data and the one I recorded using a keyboard on Track 1 - 
-
-*Smooth angle distribution*
-![image5]
-
-*Non-smooth angle distribution*
-![image1]
-
-As can be seen quiet clearly from the steering angle spikes, the Udacity data is much more smoother than the one obtained through keyboard based inputs. This adversely affects the training phase where the model only learns how to drive "rash", and hence is predisposed to naturally going out of the road because of a random extreme turn. This is why I had no option but to use the limited Udacity data for training. 
-
-To make the most of this data, I used a combination of artificial techniques to augment and balance the data, like randomly choosing between center, left, and right camera images (and adjusting steering angles accordingly), X and Y axis translation, image flipping, normalization, cropping, brightness adjustment, etc. 
-
-For details about how I created the training data, see the next section. 
-
-### Model Architecture and Training Strategy
-
-#### 1. Solution Design Approach
+#### Solution Design Approach
 
 The overall strategy for deriving a model architecture was to go from an underfitting model to one that was just starting to overfit. In the interim, I believed I would find the perfect solution. 
 
@@ -127,7 +96,11 @@ To mitigate the overfitting, I made the following changes-
 
 At the end of the process, the vehicle was able to drive autonomously around the track without leaving the road.
 
-#### 2. Final Model Architecture
+#### Model parameter tuning
+
+The model used an adam optimizer with a learning rate of 1e-04. The number of epochs was set at 5, as there wasn't a substantional observed improvement after. 
+
+#### Final Model Architecture
 
 The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes -
 ![image8]
@@ -137,7 +110,7 @@ The final model architecture (model.py lines 18-24) consisted of a convolution n
 * 3, 4, 5, and 6 Convolution layers are meant to perform the usual feature extractions from the image data in increasing complexity. The final convolutional layer has a depth of 64 filters and output size 30 * 30
 * The 4 Fully Connected layers help converge the model to a single output using linear activation in the last FC layer. This output is then used as the steering angle prediction of the model. 
 
-#### 3. Creation of the Training Set & Training Process
+#### Creation of the Training Set & Training Process
 
 To capture good driving behavior, I used Udacity's "smoother" driving data that had a combination of center lane driving and recovery recordings. 
 
