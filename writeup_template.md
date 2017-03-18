@@ -1,9 +1,17 @@
 # **Behavioral Cloning** 
 
+## Requirements
+
 The following command must be used in the project's root directory to see the Neural Network in action!!
 ```sh
 python drive.py model.h5
 ```
+Udacity's simulator must be installed and running in Automous mode. 
+
+Simulator download links-
+[Windows](https://d17h27t6h515a5.cloudfront.net/topher/2017/February/58ae4419_windows-sim/windows-sim.zip)
+[Mac](https://d17h27t6h515a5.cloudfront.net/topher/2017/February/58ae4594_mac-sim.app/mac-sim.app.zip)
+[Linux](https://d17h27t6h515a5.cloudfront.net/topher/2017/February/58ae46bb_linux-sim/linux-sim.zip)
 
 ## Brief Description
 
@@ -32,8 +40,8 @@ The goals / steps of this project are the following:
 
 ---
 
-### The DATA
-
+## Detailed Analysis
+### DATA
 #### Which data to choose?
 
 The training data derived by manually driving through Track 1 was very abrupt. This is especially true if you use a keyboard to drive rather than a mouse or a joystick, which was the case for me as the MacOS simulator does not allow mouse input for steering angles. Here is a comparison of the official Udacity provided data and the one I recorded using a keyboard on Track 1 - 
@@ -59,7 +67,7 @@ In-order to reduce overfitting, the following steps were employed:
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
-### Model Architecture and Training Strategy
+### MODEL ARCHITECTURE
 
 My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
 ```sh
@@ -110,7 +118,7 @@ The final model architecture (model.py lines 18-24) consisted of a convolution n
 * 3, 4, 5, and 6 Convolution layers are meant to perform the usual feature extractions from the image data in increasing complexity. The final convolutional layer has a depth of 64 filters and output size 30 * 30
 * The 4 Fully Connected layers help converge the model to a single output using linear activation in the last FC layer. This output is then used as the steering angle prediction of the model. 
 
-#### Creation of the Training Set & Training Process
+### TRAINING
 
 To capture good driving behavior, I used Udacity's "smoother" driving data that had a combination of center lane driving and recovery recordings. 
 
@@ -143,8 +151,22 @@ At first comparison, it becomes evident that the data is much better now. It is 
 Here is another comparison - 
 
 *Old data*
+
 ![image4]
+
 *Processed data*
+
 ![image3]
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
+
+---
+
+### CONCLUSION
+On testing the above model on the simulator, the car drove indefinitely without touching the sidelanes. The goal was achieved and it was proven that a dataset as small as 8,000 images can be enough to successfully train a Convolutional Neural Network. This was also the smallest dataset used among my fellow Udacity students to train and test a CNN successfully on the simulation. 
+
+#### What's next?
+There is a Track 2....
+In addition to covering that, I'd like to add lane detection and object detection to this code as well. I've already implemented those as separate projects [here](https://github.com/yudhvir/Advanced-Lane-Finding) and [here](https://github.com/yudhvir/Vehicle-Detection), but when combined, these three projects could help make a Level 3 self driving car. 
+Now that would be pretty awesome!!!
+
